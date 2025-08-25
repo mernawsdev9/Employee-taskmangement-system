@@ -1,0 +1,5 @@
+{
+  "name": "Employee Tracking System",
+  "description": "A modern, clean, and user-friendly Employee Tracking System with support for Admin, Manager, and Employee roles. Includes a secure user authentication system with registration and login capabilities.",
+  "requestFramePermissions": []
+}
