@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import * as DataService from '../../services/dataService';
 import * as AuthService from '../../services/authService';
 import { OnboardingSubmission } from '../../types';
-import { UsersIcon, ClipboardListIcon, DocumentPlusIcon } from '../../constants';
+import { UsersIcon, ClipboardListIcon, DocumentPlusIcon, ArrowPathIcon } from '../../constants';
 import Button from '../shared/Button';
 
 const StatCard = ({ icon, title, value, linkTo }: { icon: React.ReactNode, title: string, value: string, linkTo: string }) => (
@@ -42,8 +42,10 @@ const HRDashboard: React.FC = () => {
     const { user } = useAuth();
     const [stats, setStats] = useState({ totalEmployees: 0, totalProjects: 0, totalSubmissions: 0 });
     const [recentSubmissions, setRecentSubmissions] = useState<OnboardingSubmission[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    const loadData = useCallback(() => {
+        setIsLoading(true);
         const employees = AuthService.getUsers();
         const projects = DataService.getAllProjects();
         const submissions = DataService.getOnboardingSubmissions();
@@ -55,12 +57,29 @@ const HRDashboard: React.FC = () => {
         });
 
         setRecentSubmissions(submissions.slice(0, 5));
+        setIsLoading(false);
     }, []);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     return (
         <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">HR Dashboard</h1>
-            <p className="text-slate-600 mb-6">Welcome, {user?.name}! Here's a summary of HR activities.</p>
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">HR Dashboard</h1>
+                    <p className="text-slate-600">Welcome, {user?.name}! Here's a summary of HR activities.</p>
+                </div>
+                <button 
+                    onClick={loadData} 
+                    disabled={isLoading} 
+                    className="p-2 rounded-full text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-wait"
+                    aria-label="Refresh data"
+                >
+                    <ArrowPathIcon className={`h-6 w-6 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <StatCard icon={<DocumentPlusIcon />} title="Onboarding Submissions" value={`${stats.totalSubmissions}`} linkTo="/onboarding" />

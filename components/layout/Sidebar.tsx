@@ -24,8 +24,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
 
   return (
     <div className={`flex flex-col bg-slate-800 text-slate-100 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
-      <div className="h-16 flex items-center justify-center text-2xl font-bold text-white border-b border-slate-700 flex-shrink-0">
-        {isCollapsed ? 'E' : 'ETS'}
+      <div className={`h-16 flex items-center border-b border-slate-700 flex-shrink-0 ${isCollapsed ? 'justify-center' : 'justify-between px-4'}`}>
+        {!isCollapsed && <span className="text-2xl font-bold text-white">ETS</span>}
+        <button 
+          onClick={toggleCollapse} 
+          className="p-2 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+           <div className={`transform transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}>
+              <ChevronLeftIcon />
+           </div>
+        </button>
       </div>
       <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto overflow-x-hidden">
         {navItems.map((item) => (
@@ -54,17 +63,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
           </div>
         ))}
       </nav>
-      <div className="px-2 py-4 border-t border-slate-700">
-          <button 
-            onClick={toggleCollapse} 
-            className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-             <div className={`transform transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}>
-                <ChevronLeftIcon />
-             </div>
-          </button>
-      </div>
     </div>
   );
 };

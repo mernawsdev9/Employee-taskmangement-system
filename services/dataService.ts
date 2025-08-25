@@ -5,14 +5,14 @@ let COMPANIES: Company[] = [
 ];
 
 let DEPARTMENTS: Department[] = [
-    { id: 'dept-1', name: 'Administration' },
-    { id: 'dept-2', name: 'Finance & Accounting' },
-    { id: 'dept-3', name: 'Human Resources (HR)' },
-    { id: 'dept-4', name: 'Operations' },
-    { id: 'dept-5', name: 'Marketing' },
-    { id: 'dept-6', name: 'Sales' },
-    { id: 'dept-7', name: 'Information Technology (IT)' },
-    { id: 'dept-8', name: 'Customer Service' },
+    { id: 'dept-1', name: 'Administration', companyId: 'comp-1' },
+    { id: 'dept-2', name: 'Finance & Accounting', companyId: 'comp-1' },
+    { id: 'dept-3', name: 'Human Resources (HR)', companyId: 'comp-1' },
+    { id: 'dept-4', name: 'Operations', companyId: 'comp-1' },
+    { id: 'dept-5', name: 'Marketing', companyId: 'comp-1' },
+    { id: 'dept-6', name: 'Sales', companyId: 'comp-1' },
+    { id: 'dept-7', name: 'Information Technology (IT)', companyId: 'comp-1' },
+    { id: 'dept-8', name: 'Customer Service', companyId: 'comp-1' },
 ];
 
 let PROJECTS: Project[] = [
@@ -225,10 +225,15 @@ export const getDepartments = (): Department[] => {
     return [...DEPARTMENTS];
 };
 
-export const createDepartment = (name: string): Department => {
+export const getDepartmentById = (id: string): Department | undefined => {
+    return DEPARTMENTS.find(d => d.id === id);
+};
+
+export const createDepartment = (name: string, companyId: string): Department => {
     const newDepartment: Department = {
         id: `dept-${Date.now()}`,
         name,
+        companyId,
     };
     DEPARTMENTS.unshift(newDepartment);
     return newDepartment;
@@ -241,6 +246,10 @@ export const getProjectsByManager = (managerId: string): Project[] => {
 
 export const getProjectsByCompany = (companyId: string): Project[] => {
     return PROJECTS.filter(p => p.companyId === companyId);
+};
+
+export const getProjectsByDepartment = (departmentId: string): Project[] => {
+    return PROJECTS.filter(p => p.departmentIds.includes(departmentId));
 };
 
 export const getAllProjects = (): Project[] => {
@@ -319,6 +328,20 @@ export const deleteTask = (taskId: string): void => {
 export const getAttendanceByDate = (date: string): string[] => {
     return ATTENDANCE_DATA[date] || [];
 };
+
+export const getAttendanceForUserByMonth = (userId: string, year: number, month: number): string[] => {
+    const monthString = (month + 1).toString().padStart(2, '0');
+    const presentDates: string[] = [];
+    for (const date in ATTENDANCE_DATA) {
+        if (date.startsWith(`${year}-${monthString}`)) {
+            if (ATTENDANCE_DATA[date].includes(userId)) {
+                presentDates.push(date);
+            }
+        }
+    }
+    return presentDates;
+};
+
 
 // --- CHAT FUNCTIONS ---
 export const getConversationsForUser = (userId: string): ChatConversation[] => {

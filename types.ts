@@ -15,6 +15,7 @@ export interface Company {
 export interface Department {
   id: string;
   name: string;
+  companyId: string;
 }
 
 export interface UserStats {

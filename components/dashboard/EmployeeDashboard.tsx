@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import * as DataService from '../../services/dataService';
 import { Task, TaskStatus } from '../../types';
 import { Link } from 'react-router-dom';
+import { ArrowPathIcon } from '../../constants';
 
 const ActionButton = ({ onClick, children, className }: { onClick: () => void, children: React.ReactNode, className: string }) => (
     <button onClick={onClick} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors shadow-sm w-full sm:w-auto ${className}`}>
@@ -46,13 +47,20 @@ const EmployeeDashboard: React.FC = () => {
     const [isOnBreak, setIsOnBreak] = useState(false);
     const [isPunchedIn, setIsPunchedIn] = useState(false);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    const loadData = useCallback(() => {
+        setIsLoading(true);
         if (user) {
             const userTasks = DataService.getTasksByAssignee(user.id);
             setTasks(userTasks);
         }
+        setIsLoading(false);
     }, [user]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const taskCounts = {
         todo: tasks.filter(t => t.status === TaskStatus.TODO).length,
@@ -67,8 +75,20 @@ const EmployeeDashboard: React.FC = () => {
 
     return (
         <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">My Dashboard</h1>
-            <p className="text-slate-600 mb-6">Welcome back, {user?.name}!</p>
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">My Dashboard</h1>
+                    <p className="text-slate-600">Welcome back, {user?.name}!</p>
+                </div>
+                <button 
+                    onClick={loadData} 
+                    disabled={isLoading} 
+                    className="p-2 rounded-full text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-wait"
+                    aria-label="Refresh data"
+                >
+                    <ArrowPathIcon className={`h-6 w-6 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+            </div>
 
             {/* Action Center */}
             <div className="bg-white rounded-lg shadow-lg p-4 mb-8">

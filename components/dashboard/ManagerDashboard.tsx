@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { ClockIcon, DocumentCheckIcon, ExclamationTriangleIcon } from '../../constants';
+import { ClockIcon, DocumentCheckIcon, ExclamationTriangleIcon, ArrowPathIcon } from '../../constants';
 import * as AuthService from '../../services/authService';
 import * as DataService from '../../services/dataService';
 import { Project, Task, TaskStatus, User } from '../../types';
@@ -119,8 +119,10 @@ const ManagerDashboard: React.FC = () => {
     const [teamTaskCounts, setTeamTaskCounts] = useState({ todo: 0, inProgress: 0, completed: 0 });
     const [teamSize, setTeamSize] = useState(0);
     const [highPriorityTasks, setHighPriorityTasks] = useState<Task[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    const loadData = useCallback(() => {
+        setIsLoading(true);
         if (user) {
             // Fetch team members
             const teamMembers = AuthService.getTeamMembers(user.id);
@@ -166,7 +168,12 @@ const ManagerDashboard: React.FC = () => {
                 .slice(0, 5);
             setHighPriorityTasks(highPrio);
         }
+        setIsLoading(false);
     }, [user]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const chartData = [
         { label: TaskStatus.TODO, value: teamTaskCounts.todo, color: '#94a3b8' }, // slate-400
@@ -176,8 +183,20 @@ const ManagerDashboard: React.FC = () => {
 
     return (
         <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Manager Dashboard</h1>
-            <p className="text-slate-600 mb-6">Welcome, {user?.name}! Here's your team's overview.</p>
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">Manager Dashboard</h1>
+                    <p className="text-slate-600">Welcome, {user?.name}! Here's your team's overview.</p>
+                </div>
+                <button 
+                    onClick={loadData} 
+                    disabled={isLoading} 
+                    className="p-2 rounded-full text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-wait"
+                    aria-label="Refresh data"
+                >
+                    <ArrowPathIcon className={`h-6 w-6 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <StatCard 

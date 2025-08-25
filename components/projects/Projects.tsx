@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import * as DataService from '../../services/dataService';
@@ -29,6 +29,12 @@ const Projects: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [view, setView] = useState<'table' | 'card'>('table');
     const [viewingRoadmapFor, setViewingRoadmapFor] = useState<Project | null>(null);
+
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState('');
+    const [companyFilter, setCompanyFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [managerFilter, setManagerFilter] = useState('all');
 
     // Form state
     const [newProjectName, setNewProjectName] = useState('');
@@ -89,6 +95,18 @@ const Projects: React.FC = () => {
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    const filteredProjects = useMemo(() => {
+        return projects.filter(project => {
+            const companyMatch = companyFilter === 'all' || project.companyId === companyFilter;
+            const departmentMatch = departmentFilter === 'all' || project.departmentIds.includes(departmentFilter);
+            const managerMatch = managerFilter === 'all' || project.managerId === managerFilter;
+            const searchMatch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                (project.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+            
+            return companyMatch && departmentMatch && managerMatch && searchMatch;
+        });
+    }, [projects, searchTerm, companyFilter, departmentFilter, managerFilter]);
 
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => {
@@ -154,12 +172,43 @@ const Projects: React.FC = () => {
                     <Button onClick={handleOpenModal}>Create New Project</Button>
                 )}
             </div>
+
+            <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <input
+                        type="text"
+                        placeholder="Search projects..."
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                    />
+                    <select value={companyFilter} onChange={e => setCompanyFilter(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="all">All Companies</option>
+                        {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <select value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="all">All Departments</option>
+                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                    <select value={managerFilter} onChange={e => setManagerFilter(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="all">All Managers</option>
+                        {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    </select>
+                </div>
+            </div>
+
             <div className="flex justify-end mb-4">
                 <div className="w-64">
                     <ViewSwitcher view={view} setView={setView} />
                 </div>
             </div>
-            {view === 'table' ? (
+
+            {filteredProjects.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg shadow">
+                    <h3 className="text-xl font-semibold text-slate-700">No Projects Found</h3>
+                    <p className="text-slate-500 mt-2">No projects match your search or filter criteria.</p>
+                </div>
+            ) : view === 'table' ? (
                 <div className="bg-white shadow-md rounded-lg overflow-x-auto">
                     <table className="min-w-full leading-normal">
                         <thead>
@@ -175,7 +224,7 @@ const Projects: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {projects.map(project => (
+                            {filteredProjects.map(project => (
                                 <tr key={project.id} onClick={() => navigate(`/projects/${project.id}`)} className="cursor-pointer hover:bg-slate-50 transition-colors">
                                     <td className="px-5 py-4 border-b border-slate-200 bg-white text-sm">
                                         <Link to={`/projects/${project.id}`} onClick={(e) => e.stopPropagation()} className="text-indigo-600 hover:text-indigo-900 font-semibold whitespace-no-wrap">
@@ -231,7 +280,7 @@ const Projects: React.FC = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {projects.map(project => (
+                    {filteredProjects.map(project => (
                         <ProjectCard key={project.id} project={project} progress={project.progress} departmentNames={project.departmentNames} companyName={project.companyName} />
                     ))}
                 </div>

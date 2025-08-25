@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import * as DataService from '../../services/dataService';
 import * as AuthService from '../../services/authService';
@@ -72,6 +72,7 @@ const Companies: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCompanyName, setNewCompanyName] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const loadData = useCallback(() => {
         setIsLoading(true);
@@ -127,6 +128,13 @@ const Companies: React.FC = () => {
         loadData();
     }, [loadData]);
 
+    const filteredCompanies = useMemo(() => {
+        if (!searchTerm) return companiesWithStats;
+        return companiesWithStats.filter(company =>
+            company.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [searchTerm, companiesWithStats]);
+
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => {
         setIsModalOpen(false);
@@ -158,11 +166,29 @@ const Companies: React.FC = () => {
                 <h1 className="text-3xl font-bold text-slate-800">Companies</h1>
                 <Button onClick={handleOpenModal}>Create New Company</Button>
             </div>
+
+            <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
+                <input
+                    type="text"
+                    placeholder="Search by company name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {companiesWithStats.map(comp => (
+                {filteredCompanies.map(comp => (
                     <CompanyCard key={comp.id} company={comp} />
                 ))}
             </div>
+
+            {filteredCompanies.length === 0 && (
+                <div className="col-span-full text-center py-12 bg-white rounded-lg shadow">
+                    <h3 className="text-xl font-semibold text-slate-700">No Companies Found</h3>
+                    <p className="text-slate-500 mt-2">No companies match your search criteria.</p>
+                </div>
+            )}
 
             <Modal title="Create New Company" isOpen={isModalOpen} onClose={handleCloseModal}>
                 <form onSubmit={handleCreateCompany} className="space-y-6">
