@@ -2,34 +2,61 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import * as DataService from '../../services/dataService';
 import * as AuthService from '../../services/authService';
-import { Company, UserRole } from '../../types';
-import { Navigate } from 'react-router-dom';
+import { Company, UserRole, TaskStatus } from '../../types';
+import { Navigate, useNavigate } from 'react-router-dom';
 import Modal from '../shared/Modal';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
-import { UsersIcon, ClipboardListIcon } from '../../constants';
+import { UsersIcon } from '../../constants';
 
 interface CompanyWithStats extends Company {
     employeeCount: number;
+    managerCount: number;
     projectCount: number;
+    projectsCompleted: number;
+    projectsInProgress: number;
+    projectsPending: number;
 }
 
 const CompanyCard: React.FC<{ company: CompanyWithStats }> = ({ company }) => {
+    const navigate = useNavigate();
+
     return (
-        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1">
+        <div 
+            onClick={() => navigate(`/companies/${company.id}`)}
+            className="bg-white rounded-xl shadow-md p-6 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+        >
             <div>
                 <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-3">{company.name}</h3>
                 
                 <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-slate-500 mb-2">Details</h4>
+                    <h4 className="text-sm font-semibold text-slate-500 mb-2">Team</h4>
                     <div className="flex items-center space-x-4 text-slate-700">
                         <div className="flex items-center space-x-2">
                              <UsersIcon className="h-5 w-5" />
                              <span className="font-medium">{company.employeeCount} Employees</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <ClipboardListIcon />
-                            <span className="font-medium">{company.projectCount} Projects</span>
+                            <UsersIcon className="h-5 w-5" />
+                            <span className="font-medium">{company.managerCount} Managers</span>
+                        </div>
+                    </div>
+                </div>
+
+                 <div>
+                    <h4 className="text-sm font-semibold text-slate-500 mb-2">Projects ({company.projectCount} Total)</h4>
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-slate-600">Completed</span>
+                            <span className="font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{company.projectsCompleted}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-slate-600">In Progress</span>
+                            <span className="font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">{company.projectsInProgress}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-slate-600">Pending</span>
+                            <span className="font-bold text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">{company.projectsPending}</span>
                         </div>
                     </div>
                 </div>
@@ -58,10 +85,33 @@ const Companies: React.FC = () => {
                 const companyUsers = users.filter(u => u.companyId === comp.id);
                 const companyProjects = projects.filter(p => p.companyId === comp.id);
 
+                let projectsCompleted = 0;
+                let projectsInProgress = 0;
+                let projectsPending = 0;
+
+                companyProjects.forEach(project => {
+                    const tasks = DataService.getTasksByProject(project.id);
+                    if (tasks.length === 0) {
+                        projectsPending++;
+                        return;
+                    }
+                    const completedTasks = tasks.filter(t => t.status === TaskStatus.COMPLETED).length;
+                    if (completedTasks === tasks.length) {
+                        projectsCompleted++;
+                    } else {
+                        projectsInProgress++;
+                    }
+                });
+
+
                 return {
                     ...comp,
-                    employeeCount: companyUsers.length,
+                    employeeCount: companyUsers.filter(u => u.role === UserRole.EMPLOYEE).length,
+                    managerCount: companyUsers.filter(u => u.role === UserRole.MANAGER).length,
                     projectCount: companyProjects.length,
+                    projectsCompleted,
+                    projectsInProgress,
+                    projectsPending,
                 };
             });
 

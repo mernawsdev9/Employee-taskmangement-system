@@ -239,6 +239,10 @@ export const getProjectsByManager = (managerId: string): Project[] => {
     return PROJECTS.filter(p => p.managerId === managerId);
 };
 
+export const getProjectsByCompany = (companyId: string): Project[] => {
+    return PROJECTS.filter(p => p.companyId === companyId);
+};
+
 export const getAllProjects = (): Project[] => {
     return [...PROJECTS];
 };

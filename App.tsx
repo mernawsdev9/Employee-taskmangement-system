@@ -17,6 +17,7 @@ import Settings from './components/settings/Settings';
 import EmployeeTasks from './components/tasks/EmployeeTasks';
 import Departments from './components/departments/Departments';
 import Companies from './components/companies/Companies';
+import CompanyProjects from './components/companies/CompanyProjects';
 import Profile from './components/profile/Profile';
 import TaskDetail from './components/tasks/TaskDetail';
 import OnboardingForm from './components/onboarding/OnboardingForm';
@@ -57,6 +58,7 @@ const App: React.FC = () => {
                 <Route path="/users" element={<UserManagement />} />
                 <Route path="/users/:userId" element={<UserProfile />} />
                 <Route path="/companies" element={<Companies />} />
+                <Route path="/companies/:companyId" element={<CompanyProjects />} />
                 <Route path="/departments" element={<Departments />} />
                 <Route path="/admin-tasks" element={<AdminTasks />} />
                 <Route path="/attendance" element={<Attendance />} />
