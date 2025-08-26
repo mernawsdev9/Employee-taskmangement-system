@@ -7,11 +7,12 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import Modal from '../shared/Modal';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
-import { UsersIcon } from '../../constants';
+import { UsersIcon, BuildingOfficeIcon } from '../../constants';
 
 interface CompanyWithStats extends Company {
     employeeCount: number;
     managerCount: number;
+    departmentCount: number;
     projectCount: number;
     projectsCompleted: number;
     projectsInProgress: number;
@@ -30,8 +31,8 @@ const CompanyCard: React.FC<{ company: CompanyWithStats }> = ({ company }) => {
                 <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-3">{company.name}</h3>
                 
                 <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-slate-500 mb-2">Team</h4>
-                    <div className="flex items-center space-x-4 text-slate-700">
+                    <h4 className="text-sm font-semibold text-slate-500 mb-2">Organization</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-slate-700">
                         <div className="flex items-center space-x-2">
                              <UsersIcon className="h-5 w-5" />
                              <span className="font-medium">{company.employeeCount} Employees</span>
@@ -39,6 +40,10 @@ const CompanyCard: React.FC<{ company: CompanyWithStats }> = ({ company }) => {
                         <div className="flex items-center space-x-2">
                             <UsersIcon className="h-5 w-5" />
                             <span className="font-medium">{company.managerCount} Managers</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <BuildingOfficeIcon className="h-5 w-5" />
+                            <span className="font-medium">{company.departmentCount} Departments</span>
                         </div>
                     </div>
                 </div>
@@ -81,10 +86,12 @@ const Companies: React.FC = () => {
             const companies = DataService.getCompanies();
             const users = AuthService.getUsers();
             const projects = DataService.getAllProjects();
+            const departments = DataService.getDepartments();
 
             const stats = companies.map(comp => {
                 const companyUsers = users.filter(u => u.companyId === comp.id);
                 const companyProjects = projects.filter(p => p.companyId === comp.id);
+                const companyDepartments = departments.filter(d => d.companyId === comp.id);
 
                 let projectsCompleted = 0;
                 let projectsInProgress = 0;
@@ -109,6 +116,7 @@ const Companies: React.FC = () => {
                     ...comp,
                     employeeCount: companyUsers.filter(u => u.role === UserRole.EMPLOYEE).length,
                     managerCount: companyUsers.filter(u => u.role === UserRole.MANAGER).length,
+                    departmentCount: companyDepartments.length,
                     projectCount: companyProjects.length,
                     projectsCompleted,
                     projectsInProgress,
